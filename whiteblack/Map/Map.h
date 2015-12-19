@@ -23,6 +23,9 @@ public:
 	//blockにめり込んだ文の値を(＋)の値で返します
 	Vec2f isHitPlayerToBlock(Object, CONDITION);
 
+	void isGoal(Vec2f, Vec2f);
+	bool getIsGoal();
+
 	void isHitMoveBlockToBlock();
 
 	//選択されているマップチップの座標を引数で獲得して
@@ -46,6 +49,9 @@ private:
 
 	std::vector<std::vector<BlockBase*>> map_chip;
 	Vec2f player_start_pos;
+	Vec2f goal_pos;
+	Vec2f goal_size;
+	bool is_goal;
 
 	void mapDelete();
 

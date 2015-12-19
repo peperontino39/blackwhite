@@ -1,5 +1,4 @@
 #include "../../Top/Top.h"
-
 #include "../../Map/Map.h"
 #include "../../Player/Player.h"
 
@@ -19,6 +18,8 @@ private:
     Media gameover;
     Media clear;
     Texture bg;
+
+	void goal();
 
 };
 
