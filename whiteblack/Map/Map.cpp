@@ -42,6 +42,9 @@ Map::Map(){
 	moveleft_white = Texture("res/Texture/moveleft_white.png");
 	moveright_white = Texture("res/Texture/moveright_white.png");
 	moveup_white = Texture("res/Texture/moveup_white.png");
+
+	goal_pos = Vec2f::Zero();
+	goal_size = Vec2f(static_cast<float>(BLOCKSIZE::WIDTH), static_cast<float>(BLOCKSIZE::HEIGHT) * 2);
 }
 
 void Map::update(){
@@ -65,6 +68,8 @@ void Map::draw(){
 
 		}
 	}
+
+	drawFillBox(goal_pos.x(), goal_pos.y(), goal_size.x(), goal_size.y(), Color::yellow);
 
 	drawBox(p.po.x(), p.po.y(), p.si.x(), p.si.y(), 10, Color::green);
 
@@ -240,6 +245,13 @@ void Map::setup(int stage){
 				map_chip_[x]->setImageBlack(moveblock_up);
                 map_chip_[x]->setImageWhite(moveup_white);
 				break;
+
+			case 17:
+				map_chip_.push_back(new BlockBase);
+				map_chip_[x]->setCondition(CONDITION::NONE);
+				goal_pos = Vec2f(
+					static_cast<float>(BLOCKSIZE::WIDTH)*x,
+					-(static_cast<float>(BLOCKSIZE::HEIGHT)*y));
 			}
 
 			map_chip_[x]->setPos(Vec2f(
@@ -253,8 +265,7 @@ void Map::setup(int stage){
 		map_chip_.clear();
 	}
 
-
-
+	is_goal = false;
 
 	delete map_file;
 }
@@ -328,6 +339,24 @@ Vec2f Map::isHitPlayerToBlock(Object player, CONDITION player_condition){
 
 
 	return sinking;
+}
+
+void Map::isGoal(Vec2f player_pos, Vec2f player_size)
+{
+	if (player_pos.x() + player_size.x() > goal_pos.x() &&
+		player_pos.x() < goal_pos.x() + goal_size.x())
+	{
+		if (player_pos.y() + player_size.y() > goal_pos.y() &&
+			player_pos.y() < goal_pos.y() + goal_size.y())
+		{
+			is_goal = true;
+		}
+	}
+}
+
+bool Map::getIsGoal()
+{
+	return is_goal;
 }
 
 void Map::isHitMoveBlockToBlock()
@@ -550,7 +579,6 @@ Vec2f Map::collsion(Object player, Object block, bool up, bool down){
 	return Vec2f(0, 0);
 
 }
-
 
 Vec2f Map::pos(){
     return Vec2f(0, map_chip.size() * static_cast<float>(BLOCKSIZE::HEIGHT));
