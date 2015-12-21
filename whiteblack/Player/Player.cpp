@@ -2,16 +2,17 @@
 
 
 Player::Player(){
-    
+
 }
 
 void Player::update(){
+    conditionUpdate();
 	move();
-	
+    //std::cout << color_abs << std::endl;
 }
 
 void Player::draw(){
-	
+
 	if (direction == DIRECTION::LEFT){
 
 		drawTextureBox(
@@ -19,8 +20,8 @@ void Player::draw(){
 			0,
 			player.size.x(),
 			player.size.y(),
-			0+cut_x,
-			0,
+			0 + cut_x,
+			0 + cut_y,
 			256,
 			256,
 			player_texture,
@@ -32,12 +33,12 @@ void Player::draw(){
 	if (direction == DIRECTION::RIGHT){
 
 		drawTextureBox(
-			0+player.size.x()/2,
+			0 + player.size.x() / 2,
 			0,
 			player.size.x(),
 			player.size.y(),
-			0+cut_x,
-			0,
+			0 + cut_x,
+			0 + cut_y,
 			256,
 			256,
 			player_texture,
@@ -46,31 +47,55 @@ void Player::draw(){
 			Vec2f(player.size.x() / 2, 0)
 			);
 	}
-	
-	
-	
+
+
+
 }
 
 void Player::setup(Vec2f pos){
 	player_texture = Texture("res/Texture/chara.png");
-
+    cut_y = 768;
+    fream = 12;
 	player.pos = pos;
-	player.size = Vec2f(140, 190);
+	player.size = Vec2f(95, 190);
 
-	speed = Vec2f(0.4, 50);
+	speed = Vec2f(0.8, 21);
 	player.vec = Vec2f(0, 0);
-	g = 2;
+	g = 1;
 
-	selection = Vec2i(0,0);
+	selection = Vec2i(0, 0);
 	direction = DIRECTION::RIGHT;
 
 	ColorMax = 3;
 	color_abs = 0;
 	animation_count = 0;
+	jump_flag = false;
+}
+
+void Player::conditionUpdate(){
+	cut_x = 256;
+	switch (color_abs)
+	{
+	case 0:
+        cut_y = 768;
+		fream = 9;
+		break;
+	case 1:
+        cut_y = 512;
+		fream = 6;
+		break;
+	case 2:
+        cut_y = 256;
+		fream = 3;
+		break;
+	case 3:
+        cut_y = 0;
+		fream = 0;
+		break;
+	}
 }
 
 void Player::move(){
-	cut_x = 256;
 	dirUpdate(select_dir);
 	//ブロック選択
 	if (select_dir == SELECTDIR::Y ||
@@ -99,45 +124,44 @@ void Player::move(){
 			}
 		}
 	}
-	
+
 	//移動
 	if (env.isPressKey('Z') && env.isPressKey('C')){
 		;
 	}
 	else if (env.isPressKey('Z')){
 		animation();
-		player.vec.x() += speed.x();
-		player.pos.x() -= player.vec.x();
-		if (player.vec.x() > 4){
-			player.vec.x() = 4;
+		player.vec.x() -= speed.x();
+		
+
+		if (player.vec.x() < -8){
+			player.vec.x() = -8;
 		}
 		direction = DIRECTION::LEFT;
 	}
 	else if (env.isPressKey('C')){
 		animation();
 		player.vec.x() += speed.x();
-		player.pos.x() += player.vec.x();
-		if (player.vec.x() > 4){
-			player.vec.x() = 4;
+		if (player.vec.x() > 8){
+			player.vec.x() = 8;
 		}
 		direction = DIRECTION::RIGHT;
 	}
+
+
+
+
+	player.pos.x() += player.vec.x();
 	
-	
-	if (direction == DIRECTION::LEFT){
-		player.pos.x() -= player.vec.x();
-	}
-	if (direction == DIRECTION::RIGHT){
-		player.pos.x() += player.vec.x();
-	}
-	if (player.vec.x() > 0){
-		player.vec.x() -= 0.2;
+	if (player.vec.x()*player.vec.x() > 0.01){
+		player.vec.x() *= 0.9;
 	}
 	else{
 		player.vec.x() = 0;
 	}
+	
 	//ジャンプ
-	if (player.vec.y() < -0.1){
+	if (player.vec.y() > -3){
 		if (jump_flag == true){
 			if (env.isPushKey('K')){
 				player.vec.y() = speed.y();
@@ -145,34 +169,29 @@ void Player::move(){
 			}
 		}
 	}
+
 	player.pos.y() += player.vec.y();
-	if (player.vec.y() >= -45){
+	if (player.vec.y() >= -25){
 		player.vec.y() -= g;
 	}
+	
 }
 
 
 
-bool Player::suckOutColor(CONDITION cond){
-
-	if (cond == CONDITION::BLACK){
-		if (color_abs < 4){
-			if (env.isPushKey('J')){
-				color_abs++;
-				return true;
-			}
+bool Player::suckColor(){
+	if (color_abs < 3){
+		if (env.isPushKey('J')){
+			return true;
 		}
 	}
-	if (cond == CONDITION::WHITE){
-		if (color_abs >= 0){
-			if (env.isPushKey('L')){
-				color_abs--;
-				return true;
-			}
+	return false;
+}
+bool Player::outColor(){
+	if (color_abs > 0){
+		if (env.isPushKey('L')){
+			return true;
 		}
-	}
-	if (env.isPushKey('I')){
-		color_abs = 0;
 	}
 	return false;
 }
@@ -192,8 +211,9 @@ void Player::dirUpdate(SELECTDIR& select_dir){
 
 void Player::animation(){
 	animation_count++;
-	int index = (animation_count/6)%3 ;
-	cut_x = (index)  * 256.0f;
+	int index = (animation_count / 6) % 3+fream;
+	cut_x = (index%3) * 256.0f;
+	cut_y = (index/3) * 256.0f;
 }
 
 Object Player::getObject(){
@@ -201,7 +221,7 @@ Object Player::getObject(){
 }
 
 Vec2i Player::getSelect(){
-	return player_pos()+selection;
+	return player_pos() + selection;
 }
 CONDITION Player::getCondition(){
 	if (color_abs < 2){
@@ -212,11 +232,11 @@ CONDITION Player::getCondition(){
 			return CONDITION::BLACK;
 		}
 	}
-	
+	return CONDITION::BLACK;
 }
 
 Vec2i Player::player_pos(){
-	return p_pos = Vec2i((player.pos.x() + player.size.x() / 2) / static_cast<int>(BLOCKSIZE::WIDTH), (std::abs(player.pos.y())+player.size.y() / 2) / static_cast<int>(BLOCKSIZE::HEIGHT));
+	return p_pos = Vec2i((player.pos.x() + player.size.x() / 2) / static_cast<int>(BLOCKSIZE::WIDTH), (std::abs(player.pos.y()) + player.size.y() / 2) / static_cast<int>(BLOCKSIZE::HEIGHT));
 }
 
 void Player::addPos(Vec2f add){
@@ -224,5 +244,15 @@ void Player::addPos(Vec2f add){
 		jump_flag = true;
 		player.vec.y() = 0;
 	}
+    if (add.y() < 0){
+        player.vec.y() = -0.1;
+    }
 	player.pos += add;
+}
+
+void Player::addColor(){
+	color_abs++;
+}
+void Player::subColor(){
+	color_abs--;
 }
